@@ -48,22 +48,11 @@ function generateDefinition (
 		: `interface ${name} ${body}`;
 }
 
-function main () {
-	const args = process.argv.slice(2);
-	const jsonPath = args.find(arg => !arg.startsWith('--'));
-	const useTabs = args.includes('--tabs');
-	const useFourSpaces = args.includes('--spaces');
-	const useType = args.includes('--type');
-	const useInterface = args.includes('--interface');
-
-	const indentStr = useTabs ? '\t' : useFourSpaces ? '    ' : '  ';
-	const outputKind: 'interface' | 'type' = useType ? 'type' : 'interface';
-
-	if (!jsonPath) {
-		console.error('Usage: ts-node generate-interface.ts <json_path> [--tabs | --spaces] [--type | --interface]');
-		process.exit(1);
-	}
-
+function generateDefinitionForJson ({ jsonPath, indentStr, outputKind }: {
+	jsonPath: string,
+	indentStr: string,
+	outputKind: 'interface' | 'type'
+}) {
 	const fullPath = path.resolve(jsonPath);
 	if (!fs.existsSync(fullPath)) {
 		console.error(`File not found: ${fullPath}`);
@@ -86,6 +75,27 @@ function main () {
 		);
 	} else {
 		console.log(definition);
+	}
+}
+
+function main () {
+	const args = process.argv.slice(2);
+	const jsonPaths = args.filter(arg => !arg.startsWith('--'));
+	const useTabs = args.includes('--tabs');
+	const useFourSpaces = args.includes('--spaces');
+	const useType = args.includes('--type');
+	const useInterface = args.includes('--interface');
+
+	const indentStr = useTabs ? '\t' : useFourSpaces ? '    ' : '  ';
+	const outputKind: 'interface' | 'type' = useType ? 'type' : 'interface';
+
+	if (jsonPaths.length === 0) {
+		console.error('Usage:\n\ttsj <json_path> [--tabs | --spaces] [--type | --interface]');
+		process.exit(1);
+	}
+
+	for (const jsonPath of jsonPaths) {
+		generateDefinitionForJson({ jsonPath, indentStr, outputKind })
 	}
 }
 
