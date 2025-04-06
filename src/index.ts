@@ -1,0 +1,77 @@
+#!/usr/bin/env node
+
+import * as fs from 'fs';
+import * as path from 'path';
+
+function generateDefinition(
+	name: string,
+	obj: any,
+	indentStr: string,
+	outputType: 'interface' | 'type'
+): string {
+	const pad = (level: number) => indentStr.repeat(level);
+
+	function parseType(value: any, level: number): string {
+		if (Array.isArray(value)) {
+			if (value.length === 0) return 'any[]';
+			return `${parseType(value[0], level)}[]`;
+		}
+		if (value === null) return 'any';
+		switch (typeof value) {
+			case 'string':
+				return 'string';
+			case 'number':
+				return 'number';
+			case 'boolean':
+				return 'boolean';
+			case 'object':
+				return generateInlineObject(value, level);
+			default:
+				return 'any';
+		}
+	}
+
+	function generateInlineObject(obj: any, level: number): string {
+		const entries = Object.entries(obj).map(([key, value]) => {
+			return `${pad(level + 1)}${key}: ${parseType(value, level + 1)};`;
+		});
+		return `{\n${entries.join('\n')}\n${pad(level)}}`;
+	}
+
+	const body = generateInlineObject(obj, 0);
+	return outputType === 'type'
+		? `type ${name} = ${body}`
+		: `interface ${name} ${body}`;
+}
+
+function main() {
+	const args = process.argv.slice(2);
+	const jsonPath = args.find(arg => !arg.startsWith('--'));
+	const useTabs = args.includes('--tabs');
+	const useFourSpaces = args.includes('--spaces');
+	const useType = args.includes('--type');
+	const useInterface = args.includes('--interface');
+
+	const indentStr = useTabs ? '\t' : useFourSpaces ? '    ' : '  ';
+	const outputKind: 'interface' | 'type' = useType ? 'type' : 'interface';
+
+	if (!jsonPath) {
+		console.error('Usage: ts-node generate-interface.ts <json_path> [--tabs | --spaces] [--type | --interface]');
+		process.exit(1);
+	}
+
+	const fullPath = path.resolve(jsonPath);
+	if (!fs.existsSync(fullPath)) {
+		console.error(`File not found: ${fullPath}`);
+		process.exit(1);
+	}
+
+	const rawData = fs.readFileSync(fullPath, 'utf8');
+	const json = JSON.parse(rawData);
+	const baseName = path.basename(jsonPath, path.extname(jsonPath)).replace(/[^a-zA-Z0-9]/g, '');
+	const typeName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+
+	console.log(generateDefinition(typeName, json, indentStr, outputKind));
+}
+
+main();
