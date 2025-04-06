@@ -3,7 +3,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-function generateDefinition(
+
+
+function generateDefinition (
 	name: string,
 	obj: any,
 	indentStr: string,
@@ -11,12 +13,14 @@ function generateDefinition(
 ): string {
 	const pad = (level: number) => indentStr.repeat(level);
 
-	function parseType(value: any, level: number): string {
+	function parseType (value: any, level: number): string {
 		if (Array.isArray(value)) {
 			if (value.length === 0) return 'any[]';
-			return `${parseType(value[0], level)}[]`;
+			const first = value[0];
+			return `${parseType(first, level)}[]`;
 		}
 		if (value === null) return 'any';
+
 		switch (typeof value) {
 			case 'string':
 				return 'string';
@@ -31,7 +35,7 @@ function generateDefinition(
 		}
 	}
 
-	function generateInlineObject(obj: any, level: number): string {
+	function generateInlineObject (obj: any, level: number): string {
 		const entries = Object.entries(obj).map(([key, value]) => {
 			return `${pad(level + 1)}${key}: ${parseType(value, level + 1)};`;
 		});
@@ -44,7 +48,7 @@ function generateDefinition(
 		: `interface ${name} ${body}`;
 }
 
-function main() {
+function main () {
 	const args = process.argv.slice(2);
 	const jsonPath = args.find(arg => !arg.startsWith('--'));
 	const useTabs = args.includes('--tabs');
@@ -71,7 +75,18 @@ function main() {
 	const baseName = path.basename(jsonPath, path.extname(jsonPath)).replace(/[^a-zA-Z0-9]/g, '');
 	const typeName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
 
-	console.log(generateDefinition(typeName, json, indentStr, outputKind));
+	// If root is an array, generate type for its elements and wrap in []
+	const rootValue = Array.isArray(json) && json.length > 0 ? json[0] : json;
+	const definition = generateDefinition(typeName, rootValue, indentStr, outputKind);
+
+	if (Array.isArray(json)) {
+		console.log(outputKind === 'type'
+			? `type ${typeName} = ${typeName}Item[];\n` + definition.replace(`type ${typeName}`, `type ${typeName}Item`)
+			: `interface ${typeName}Item ${definition.slice(definition.indexOf('{'))}\n\ntype ${typeName} = ${typeName}Item[];`
+		);
+	} else {
+		console.log(definition);
+	}
 }
 
 main();
