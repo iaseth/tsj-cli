@@ -1,0 +1,22 @@
+{
+  "name": "tsj-cli",
+  "version": "0.1.0",
+  "description": "Generate TypeScript interfaces or types from JSON via the command line.",
+  "bin": {
+    "tsj": "./dist/index.js"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/index.ts"
+  },
+  "keywords": ["typescript", "json", "interface", "cli", "generator"],
+  "author": "Ankur Seth",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3"
+  }
+}
