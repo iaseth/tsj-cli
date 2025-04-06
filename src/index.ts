@@ -90,7 +90,7 @@ function main () {
 	const outputKind: 'interface' | 'type' = useType ? 'type' : 'interface';
 
 	if (jsonPaths.length === 0) {
-		console.error('Usage:\n\ttsj <json_path> [--tabs | --spaces] [--type | --interface]');
+		console.error('Usage:\n\ttsj <json_paths> [--tabs | --spaces] [--type | --interface]');
 		process.exit(1);
 	}
 

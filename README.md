@@ -16,13 +16,13 @@
 ## 🚀 Installation
 
 ```bash
-npm install -g tsj-cli
+npm i -g tsj-cli@latest
 ```
 
 ## 🛠 Usage
 
 ```bash
-tsj <path/to/file.json> [--type | --interface] [--tabs | --spaces]
+tsj <paths/to/file.json> [--type | --interface] [--tabs | --spaces]
 ```
 
 ### Examples
